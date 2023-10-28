@@ -1,6 +1,31 @@
 import UIKit
 
+struct QuizStepViewModel {
+  let image: UIImage
+  let question: String
+  let questionNumber: String
+}
+
+struct QuizQuestion {
+  let image: String
+  let text: String
+  let correctAnswer: Bool
+}
+
+
+struct QuizResultsViewModel {
+  let title: String
+  let text: String
+  let buttonText: String
+}
+
 final class MovieQuizViewController: UIViewController {
+    
+    @IBOutlet private var yesButton: UIButton!
+    @IBOutlet private var noButton: UIButton!
+    @IBOutlet private var imageView: UIImageView!
+    @IBOutlet private var textLabel: UILabel!
+    @IBOutlet private var counterLabel: UILabel!
     
     private var currentQuestionIndex = 0
     private var correctAnswers = 0
@@ -21,9 +46,13 @@ final class MovieQuizViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        yesButton.isEnabled = true
+        noButton.isEnabled = true
     }
     
-
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        return .lightContent
+    }
     
     private func showNextQuestionOrResults() {
         if currentQuestionIndex == questions.count - 1 {
@@ -40,9 +69,11 @@ final class MovieQuizViewController: UIViewController {
             let viewModel = convert(model: nextQuestion)
             
             show(quiz: viewModel)
+            
+            yesButton.isEnabled = true
+            noButton.isEnabled = true
         }
     }
-    
     
     private func show(quiz step: QuizStepViewModel) {
       imageView.image = step.image
@@ -65,22 +96,8 @@ final class MovieQuizViewController: UIViewController {
     }
     
     private func removeBorderColor() {
-            imageView.layer.borderColor = nil
+            imageView.layer.borderColor = UIColor.clear.cgColor
         }
-    
-    @IBAction private func noButtonClicked(_ sender: UIButton) {
-        let currentQuestion = questions[currentQuestionIndex]
-        let givenAnswer = false
-        
-        showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
-    }
-    
-    @IBAction private func yesButtonClicked(_ sender: UIButton) {
-        let currentQuestion = questions[currentQuestionIndex]
-        let givenAnswer = true
-        
-        showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
-    }
     
     private func show(quiz result: QuizResultsViewModel) {
         let alert = UIAlertController(
@@ -96,6 +113,8 @@ final class MovieQuizViewController: UIViewController {
             let firstQuestion = self.questions[self.currentQuestionIndex]
             let viewModel = self.convert(model: firstQuestion)
             self.show(quiz: viewModel)
+            self.yesButton.isEnabled = true
+            self.noButton.isEnabled = true
         }
         
         alert.addAction(action)
@@ -111,32 +130,32 @@ final class MovieQuizViewController: UIViewController {
             return questionStep
     }
     
-    @IBOutlet private var imageView: UIImageView!
-    @IBOutlet private var textLabel: UILabel!
-    @IBOutlet private var counterLabel: UILabel!
+    @IBAction private func noButtonClicked(_ sender: UIButton) {
+        let currentQuestion = questions[currentQuestionIndex]
+        let givenAnswer = false
+        
+        showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
+        
+        yesButton.isEnabled = false
+        noButton.isEnabled = false
+    }
     
+    @IBAction private func yesButtonClicked(_ sender: UIButton) {
+        let currentQuestion = questions[currentQuestionIndex]
+        let givenAnswer = true
+        
+        showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
+        
+        yesButton.isEnabled = false
+        noButton.isEnabled = false
+    }
 }
 
 
 
-struct QuizStepViewModel {
-  let image: UIImage
-  let question: String
-  let questionNumber: String
-}
-
-struct QuizQuestion {
-  let image: String
-  let text: String
-  let correctAnswer: Bool
-}
 
 
-struct QuizResultsViewModel {
-  let title: String
-  let text: String
-  let buttonText: String
-}
+
 
 
 
