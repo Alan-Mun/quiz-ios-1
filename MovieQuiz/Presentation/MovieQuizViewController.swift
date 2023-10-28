@@ -51,7 +51,7 @@ final class MovieQuizViewController: UIViewController {
     }
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
-        return .lightContent // Используйте .default для черного статус-бара
+        return .lightContent
     }
     
     private func showNextQuestionOrResults() {
