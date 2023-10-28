@@ -32,7 +32,7 @@ final class MovieQuizViewController: UIViewController {
                 title: "Этот раунд окончен!",
                 text: text,
                 buttonText: "Сыграть ещё раз")
-            show(quiz: viewModel) // 3
+            show(quiz: viewModel)
         } else {
             currentQuestionIndex += 1
             removeBorderColor()
@@ -55,12 +55,11 @@ final class MovieQuizViewController: UIViewController {
             correctAnswers += 1
         }
         
-        imageView.layer.masksToBounds = true // 1
-        imageView.layer.borderWidth = 8 // 2
-        imageView.layer.borderColor = isCorrect ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor // 3
+        imageView.layer.masksToBounds = true
+        imageView.layer.borderWidth = 8
+        imageView.layer.borderColor = isCorrect ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-           // код, который мы хотим вызвать через 1 секунду
            self.showNextQuestionOrResults()
         }
     }
@@ -132,13 +131,10 @@ struct QuizQuestion {
   let correctAnswer: Bool
 }
 
-// для состояния "Результат квиза"
+
 struct QuizResultsViewModel {
-  // строка с заголовком алерта
   let title: String
-  // строка с текстом о количестве набранных очков
   let text: String
-  // текст для кнопки алерта
   let buttonText: String
 }
 
