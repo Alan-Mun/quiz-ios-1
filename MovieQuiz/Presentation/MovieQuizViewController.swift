@@ -1,4 +1,5 @@
 import UIKit
+import Foundation
 
 final class MovieQuizViewController: UIViewController {
     // MARK: - QuestionFactoryDelegate
@@ -35,36 +36,79 @@ final class MovieQuizViewController: UIViewController {
         super.viewDidLoad()
         
         questionFactory = QuestionFactoryImpl(delegate: self)
-        alertPresentor = AlertPresenterImpl(viewController: self)
-        statisticService = StatisticServiceImpl()
-        
-        questionFactory?.requestNextQuestion()
-        yesButton.isEnabled = true
-        noButton.isEnabled = true
+            alertPresentor = AlertPresenterImpl(viewController: self)
+            statisticService = StatisticServiceImpl()
+
+            if let savedQuestion = loadSavedQuestion() {
+                currentQuestion = savedQuestion
+                let viewModel = convert(model: savedQuestion)
+                show(quiz: viewModel)
+            } else {
+                questionFactory?.requestNextQuestion()
+            }
+
+            yesButton.isEnabled = true
+            noButton.isEnabled = true
     }
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
         return .lightContent
     }
     
+    private let savedQuestionKey = "savedQuestion"
+
+    func saveQuestion(_ question: QuizQuestion) {
+        do {
+            let encodedData = try JSONEncoder().encode(question)
+            UserDefaults.standard.set(encodedData, forKey: savedQuestionKey)
+        } catch {
+            print("Error encoding question: \(error.localizedDescription)")
+        }
+    }
+
+    func loadSavedQuestion() -> QuizQuestion? {
+        if let savedData = UserDefaults.standard.data(forKey: savedQuestionKey) {
+            do {
+                let question = try JSONDecoder().decode(QuizQuestion.self, from: savedData)
+                return question
+            } catch {
+                print("Error decoding question: \(error.localizedDescription)")
+                return nil
+            }
+        }
+        return nil
+    }
+    
+    private var isGameInProgress = false
+
     private func showNextQuestionOrResults() {
-        
         if currentQuestionIndex == questionsAmount - 1 {
-            
+            // Показать окончательные результаты, так как все вопросы пройдены
+            showFinalResults()
         } else {
             currentQuestionIndex += 1
             removeBorderColor()
             
-            questionFactory?.requestNextQuestion()
+            // Проверка, чтобы избежать повторного вызова
+            if !isGameInProgress {
+                isGameInProgress = true
+                questionFactory?.requestNextQuestion()
+            }
             
             yesButton.isEnabled = true
             noButton.isEnabled = true
         }
     }
-    
+
     private func showFinalResults() {
+        isGameInProgress = false
         statisticService?.store(correct: correctAnswers, total: questionsAmount)
-    
+
+        // Сохранение текущего вопроса перед сбросом состояния
+        if let currentQuestion = currentQuestion {
+            saveQuestion(currentQuestion)
+        }
+
         let alertModel = AlertModel(
             title: "Игра окончена!",
             message: makeResultsMessage(),
@@ -78,9 +122,12 @@ final class MovieQuizViewController: UIViewController {
                 self?.noButton.isEnabled = true
             }
         )
-        
+
         alertPresentor?.show(alertModel: alertModel)
     }
+
+
+
     
     private func makeResultsMessage() -> String {
         
@@ -104,13 +151,30 @@ final class MovieQuizViewController: UIViewController {
         return resultMessage
     }
     
-    
-    private func show(quiz step: QuizStepViewModel) {
-        imageView?.image = step.image
-      textLabel.text = step.question
-      counterLabel.text = step.questionNumber
-        questionFactory?.requestNextQuestion()
+    private func downloadImage(from url: URL, completion: @escaping (UIImage?) -> Void) {
+        print("Downloading image from URL: \(url)")
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            guard let data = data, error == nil else {
+                print("Error downloading image: \(error?.localizedDescription ?? "Unknown error")")
+                completion(nil)
+                return
+            } 
+
+            let image = UIImage(data: data)
+            completion(image)
+        }.resume()
     }
+
+    private func show(quiz step: QuizStepViewModel) {
+        downloadImage(from: step.imageURL) { [weak self] image in
+            DispatchQueue.main.async {
+                self?.imageView.image = image
+                self?.textLabel.text = step.question
+                self?.counterLabel.text = step.questionNumber
+            }
+        }
+    }
+
     
     private func showAnswerResult(isCorrect: Bool) {
         if isCorrect {
@@ -123,9 +187,12 @@ final class MovieQuizViewController: UIViewController {
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             guard let self = self else { return }
-           self.showNextQuestionOrResults()
+            self.removeBorderColor()
+            self.questionFactory?.requestNextQuestion()
+            self.showNextQuestionOrResults()
         }
     }
+
     
     private func removeBorderColor() {
             imageView.layer.borderColor = UIColor.clear.cgColor
@@ -133,11 +200,14 @@ final class MovieQuizViewController: UIViewController {
     
     private func convert(model: QuizQuestion) -> QuizStepViewModel {
         let questionStep = QuizStepViewModel(
-            image: UIImage(named: model.image) ?? UIImage(),
-                       question: model.text,
-                       questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
-            return questionStep
+            imageURL: model.imageURL,
+            question: model.text,
+            questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)"
+        )
+        return questionStep
     }
+
+
     
     @IBAction private func noButtonClicked(_ sender: UIButton) {
         guard let currentQuestion = currentQuestion else {
@@ -164,11 +234,10 @@ final class MovieQuizViewController: UIViewController {
     }
 }
 
-
-
 extension MovieQuizViewController: QuestionFactoryDelegate {
     func didReceiveQuestion(_ question: QuizQuestion?) {
         if let question = question {
+            print("Received question with imageURL: \(question.imageURL)")
             self.currentQuestion = question
             let viewModel = self.convert(model: question)
             self.show(quiz: viewModel)
