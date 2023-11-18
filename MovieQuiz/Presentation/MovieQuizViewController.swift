@@ -83,7 +83,7 @@ final class MovieQuizViewController: UIViewController {
 
     private func showNextQuestionOrResults() {
         if currentQuestionIndex == questionsAmount - 1 {
-            // Показать окончательные результаты, так как все вопросы пройдены
+            
             showFinalResults()
         } else {
             currentQuestionIndex += 1
@@ -104,7 +104,6 @@ final class MovieQuizViewController: UIViewController {
         isGameInProgress = false
         statisticService?.store(correct: correctAnswers, total: questionsAmount)
 
-        // Сохранение текущего вопроса перед сбросом состояния
         if let currentQuestion = currentQuestion {
             saveQuestion(currentQuestion)
         }

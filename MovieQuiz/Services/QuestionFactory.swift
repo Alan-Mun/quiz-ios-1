@@ -28,7 +28,6 @@ final class QuestionFactoryImpl {
             
             print("Movies count: \(movies.count)")
             
-            // Create a dispatch group to wait for all asynchronous tasks to complete
             let dispatchGroup = DispatchGroup()
             
             movies.forEach { movie in
@@ -38,7 +37,6 @@ final class QuestionFactoryImpl {
                     return
                 }
                 
-                // Enter the dispatch group before starting the download task
                 dispatchGroup.enter()
                 
                 downloadImage(from: imageURL) { [weak self] (image) in
@@ -51,12 +49,11 @@ final class QuestionFactoryImpl {
                     let quizQuestion = QuizQuestion(text: text, imageURL: imageURL, correctAnswer: correctAnswer)
                     self.questions.append(quizQuestion)
                     
-                    // Leave the dispatch group when the download and processing are complete
+
                     dispatchGroup.leave()
                 }
             }
             
-            // Notify when all tasks in the dispatch group are complete
             dispatchGroup.notify(queue: .main) {
                 print("Questions count: \(self.questions.count)")
             }
