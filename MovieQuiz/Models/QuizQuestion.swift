@@ -7,8 +7,15 @@
 
 import Foundation
 
-struct QuizQuestion {
-  let image: String
-  let text: String
-  let correctAnswer: Bool
+struct QuizQuestion: Codable {
+    let text: String
+    let imageURL: URL
+    let correctAnswer: Bool
+    
+    enum CodingKeys: String, CodingKey {
+        case text
+        case imageURL
+        case correctAnswer
+    }
 }
+

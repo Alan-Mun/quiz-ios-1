@@ -105,4 +105,19 @@ extension StatisticServiceImpl: StatisticService {
             bestGame = currentBestGame
         }
     }
+    
+    func loadTopFromJSON() -> Top? {
+        if let path = Bundle.main.path(forResource: "top250MoviesIMDB", ofType: "json") {
+            do {
+                let data = try Data(contentsOf: URL(fileURLWithPath: path), options: .mappedIfSafe)
+                let decoder = JSONDecoder()
+                let top = try decoder.decode(Top.self, from: data)
+                return top
+            } catch {
+                print("Error loading top data:", error.localizedDescription)
+                return nil
+            }
+        }
+        return nil
+    }
 }
