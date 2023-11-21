@@ -1,62 +1,34 @@
-//
-//  StatisticService.swift
-//  MovieQuiz
-//
-//  Created by Алан Мун on 18.11.2023.
-//
-
 import Foundation
 
+protocol StatisticService {
+    func store(correct count: Int, total amount: Int)
+    var totalAccuracy: Double { get }
+    var gamesCount: Int { get }
+    var bestGame: GameRecord { get }
+}
 
-
-    protocol StatisticService {
-        var totalAccuracy: Double { get }
-        var gamesCount: Int { get }
-        var bestGame: BestGame? {get}
-        
-        func store(correct: Int, total: Int)
-    }
-
-final class StatisticServiceImpl {
+final class StatisticServiceImplementations: StatisticService {
+    
+    private let userDefaults = UserDefaults.standard
     
     private enum Keys: String {
         case correct, total, bestGame, gamesCount
     }
     
-    private let userDefaults: UserDefaults
-    private let decoder: JSONDecoder
-    private let encoder: JSONEncoder
-    private let dateProvider: () -> Date
-    
-    init(userDefaults: UserDefaults = .standard,
-         decoder: JSONDecoder = JSONDecoder(),
-         encoder: JSONEncoder = JSONEncoder(),
-         dateProvider: @escaping () -> Date = { Date() }
-    ) {
-        self.userDefaults = userDefaults
-        self.decoder = decoder
-        self.encoder = encoder
-        self.dateProvider = dateProvider
-    }
-}
-
-extension StatisticServiceImpl: StatisticService {
-    
-    var gamesCount: Int {
-        get {
-            userDefaults.integer(forKey: Keys.gamesCount.rawValue)
+    func store(correct count: Int, total amount: Int) {
+        gamesCount += 1
+        correct += count
+        total += amount
+        let result = GameRecord(correct: count, total: amount, date: Date())
+        if bestGame < result {
+            bestGame = result
         }
-        set {
-            userDefaults.set(newValue, forKey: Keys.gamesCount.rawValue)
-        }
+        
     }
     
-    var total: Int {
+    var totalAccuracy: Double {
         get {
-            userDefaults.integer(forKey: Keys.total.rawValue)
-        }
-        set {
-            userDefaults.set(newValue, forKey: Keys.total.rawValue)
+            (Double(correct) / Double(total)) * 100
         }
     }
     
@@ -69,55 +41,40 @@ extension StatisticServiceImpl: StatisticService {
         }
     }
     
-    var bestGame: BestGame? {
+    var total: Int {
         get {
-            guard
-                let data = userDefaults.data(forKey: Keys.bestGame.rawValue),
-                let bestGame = try? decoder.decode(BestGame.self, from: data) else {
-                return nil
-            }
-            
-            return bestGame
+            userDefaults.integer(forKey: Keys.total.rawValue)
         }
         set {
-            let data = try? encoder.encode(newValue)
+            userDefaults.set(newValue, forKey: Keys.total.rawValue)
+        }
+    }
+    
+    var gamesCount: Int {
+        get {
+            userDefaults.integer(forKey: Keys.gamesCount.rawValue)
+        }
+        set {
+            userDefaults.set(newValue, forKey: Keys.gamesCount.rawValue)
+        }
+    }
+    
+    var bestGame: GameRecord {
+        get {
+            guard let data = userDefaults.data(forKey: Keys.bestGame.rawValue),
+                  let record = try? JSONDecoder().decode(GameRecord.self, from: data) else {
+                return .init(correct: 0, total: 0, date: Date())
+            }
+            return record
+        }
+        set {
+            guard let data = try? JSONEncoder().encode(newValue) else {
+                print("Невозможно сохранить результат")
+                return
+            }
             userDefaults.set(data, forKey: Keys.bestGame.rawValue)
         }
     }
     
-    var totalAccuracy: Double {
-        Double(correct) / Double (total)  * 100
-    }
     
-    func store(correct: Int, total: Int) {
-        self.correct += correct
-        self.total += total
-        self.gamesCount += 1
-        
-        let date = dateProvider()
-        let currentBestGame = BestGame(correct: correct, total: total, date: date)
-        
-        if let previousBestGame = bestGame {
-            if currentBestGame > previousBestGame {
-                bestGame = currentBestGame
-            }
-        } else {
-            bestGame = currentBestGame
-        }
-    }
-    
-    func loadTopFromJSON() -> Top? {
-        if let path = Bundle.main.path(forResource: "top250MoviesIMDB", ofType: "json") {
-            do {
-                let data = try Data(contentsOf: URL(fileURLWithPath: path), options: .mappedIfSafe)
-                let decoder = JSONDecoder()
-                let top = try decoder.decode(Top.self, from: data)
-                return top
-            } catch {
-                print("Error loading top data:", error.localizedDescription)
-                return nil
-            }
-        }
-        return nil
-    }
 }

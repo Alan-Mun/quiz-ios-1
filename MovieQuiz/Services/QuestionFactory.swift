@@ -1,91 +1,28 @@
 import Foundation
-import UIKit
 
-protocol QuestionFactoryDelegate: AnyObject {
-    func didReceiveQuestion(_ question: QuizQuestion?)
-}
-
-protocol QuestionFactory {
-    func requestNextQuestion()
-}
-
-final class QuestionFactoryImpl {
+class QuestionFactory: QuestionFactoryProtocol {
+    private let questions: [QuizQuestion] = [
+        QuizQuestion(image: "The Godfather", text: "Рейтинг этого фильма больше чем 6?", correctAnswer: true),
+        QuizQuestion(image: "The Dark Knight", text: "Рейтинг этого фильма больше чем 6?", correctAnswer: true),
+        QuizQuestion(image: "Kill Bill", text: "Рейтинг этого фильма больше чем 6?", correctAnswer: true),
+        QuizQuestion(image: "The Avengers", text: "Рейтинг этого фильма больше чем 6?", correctAnswer: true),
+        QuizQuestion(image: "Deadpool", text: "Рейтинг этого фильма больше чем 6?", correctAnswer: true),
+        QuizQuestion(image: "The Green Knight", text: "Рейтинг этого фильма больше чем 6?", correctAnswer: true),
+        QuizQuestion(image: "Old", text: "Рейтинг этого фильма больше чем 6?", correctAnswer: false),
+        QuizQuestion(image: "The Ice Age Adventures of Buck Wild", text: "Рейтинг этого фильма больше чем 6?", correctAnswer: false),
+        QuizQuestion(image: "Tesla", text: "Рейтинг этого фильма больше чем 6?", correctAnswer: false),
+        QuizQuestion(image: "Vivarium", text: "Рейтинг этого фильма больше чем 6?", correctAnswer: false)
+    ]
     
     private weak var delegate: QuestionFactoryDelegate?
-    private var questions: [QuizQuestion] = []
+    
+    func requestNextQuestion() {
+        let index = (0..<questions.count).randomElement() ?? 0
+        let question = questions[safe: index]
+        delegate?.didReceiveNextQuestion(question: question)
+    }
     
     init(delegate: QuestionFactoryDelegate?) {
         self.delegate = delegate
-        loadQuestionsFromJSON()
-    }
-    
-    private func loadQuestionsFromJSON() {
-        if let path = Bundle.main.path(forResource: "top250MoviesIMDB", ofType: "json"),
-           let data = try? Data(contentsOf: URL(fileURLWithPath: path)),
-           let top = try? JSONDecoder().decode(Top.self, from: data) {
-            
-            let movies = top.items
-            
-            print("Movies count: \(movies.count)")
-            
-            let dispatchGroup = DispatchGroup()
-            
-            movies.forEach { movie in
-                
-                guard let imageURL = URL(string: movie.image) else {
-                    print("Invalid image URL: \(movie.image)")
-                    return
-                }
-                
-                dispatchGroup.enter()
-                
-                downloadImage(from: imageURL) { [weak self] (image) in
-                    guard let self = self else { return }
-                    
-                    let randomComparisonRank = Int.random(in: 1...10)
-                    let correctAnswer = true
-                    let text = "Рейтинг этого фильма больше чем \(randomComparisonRank)?"
-                    
-                    let quizQuestion = QuizQuestion(text: text, imageURL: imageURL, correctAnswer: correctAnswer)
-                    self.questions.append(quizQuestion)
-                    
-
-                    dispatchGroup.leave()
-                }
-            }
-            
-            dispatchGroup.notify(queue: .main) {
-                print("Questions count: \(self.questions.count)")
-            }
-            
-        } else {
-            print("Failed to load or decode JSON file")
-        }
-    }
-    
-    private func downloadImage(from url: URL, completion: @escaping (UIImage?) -> Void) {
-        URLSession.shared.dataTask(with: url) { data, response, error in
-            guard let data = data, error == nil else {
-                print("Error downloading image: \(error?.localizedDescription ?? "Unknown error")")
-                completion(nil)
-                return
-            }
-            
-            let image = UIImage(data: data)
-            completion(image)
-        }.resume()
-    }
-}
-
-extension QuestionFactoryImpl: QuestionFactory {
-    func requestNextQuestion() {
-        DispatchQueue.main.async {
-            if let question = self.questions.randomElement() {
-                print("Selected question: \(question)")
-                self.delegate?.didReceiveQuestion(question)
-            } else {
-                print("No questions available or unexpected error.")
-            }
-        }
     }
 }
