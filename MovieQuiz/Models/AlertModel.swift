@@ -1,15 +1,10 @@
-//
-//  AlertPresenter.swift
-//  MovieQuiz
-//
-//  Created by Алан Мун on 18.11.2023.
-//
 
 import Foundation
+import UIKit
 
 struct AlertModel {
-    var title: String
-    var message: String
-    var buttonText: String
-    var buttonAction: () -> Void
+    let title: String
+    let message: String
+    let buttonText: String
+    let completion: ((UIAlertAction) -> Void)?
 }
