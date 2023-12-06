@@ -75,6 +75,4 @@ final class StatisticServiceImplementations: StatisticService {
             userDefaults.set(data, forKey: Keys.bestGame.rawValue)
         }
     }
-    
-    
 }

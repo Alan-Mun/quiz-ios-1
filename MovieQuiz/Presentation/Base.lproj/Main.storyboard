@@ -83,7 +83,7 @@
                                                     </userDefinedRuntimeAttribute>
                                                 </userDefinedRuntimeAttributes>
                                                 <connections>
-                                                    <action selector="noButtonClicked:" destination="BYZ-38-t0r" eventType="touchUpInside" id="MrB-6K-fIj"/>
+                                                    <action selector="noButtonAction:" destination="BYZ-38-t0r" eventType="touchUpInside" id="JUi-61-zkM"/>
                                                 </connections>
                                             </button>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="eAK-qg-0r5" userLabel="Yes Button">
@@ -100,7 +100,7 @@
                                                     </userDefinedRuntimeAttribute>
                                                 </userDefinedRuntimeAttributes>
                                                 <connections>
-                                                    <action selector="yesButtonClicked:" destination="BYZ-38-t0r" eventType="touchUpInside" id="Uct-12-flX"/>
+                                                    <action selector="yesButtonAction:" destination="BYZ-38-t0r" eventType="touchUpInside" id="Rm2-PN-aSW"/>
                                                 </connections>
                                             </button>
                                         </subviews>
@@ -111,17 +111,23 @@
                                     </stackView>
                                 </subviews>
                             </stackView>
+                            <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="medium" translatesAutoresizingMaskIntoConstraints="NO" id="8Oo-zl-WRz">
+                                <rect key="frame" x="197" y="438" width="20" height="20"/>
+                            </activityIndicatorView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" name="YP Black"/>
                         <constraints>
                             <constraint firstItem="b0d-jx-n2v" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="20" id="2qU-hU-ws4"/>
+                            <constraint firstItem="8Oo-zl-WRz" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="B9V-RV-pKb"/>
                             <constraint firstItem="b0d-jx-n2v" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="10" id="HEo-9E-4xu"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="b0d-jx-n2v" secondAttribute="bottom" id="IUh-iJ-yvD"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="b0d-jx-n2v" secondAttribute="trailing" constant="20" id="Ijp-er-ewG"/>
+                            <constraint firstItem="8Oo-zl-WRz" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="iba-z7-6HO"/>
                         </constraints>
                     </view>
                     <connections>
+                        <outlet property="activityIndicator" destination="8Oo-zl-WRz" id="VcT-YB-2yT"/>
                         <outlet property="counterLabel" destination="YEl-Ia-6eT" id="JRa-Rg-V0S"/>
                         <outlet property="imageView" destination="SZ6-UZ-3fu" id="reY-JT-EKa"/>
                         <outlet property="noButton" destination="cdg-6E-G7s" id="vps-Rv-5VF"/>

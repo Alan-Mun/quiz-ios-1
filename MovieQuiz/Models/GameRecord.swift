@@ -1,5 +1,3 @@
-
-
 import Foundation
 
 struct GameRecord: Codable, Comparable {
@@ -12,4 +10,3 @@ struct GameRecord: Codable, Comparable {
     let date: Date
    
 }
-
