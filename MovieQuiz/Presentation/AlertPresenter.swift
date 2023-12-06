@@ -13,5 +13,4 @@ struct AlertPresenter {
         alert.addAction(action)
         present?.present(alert, animated: true, completion: nil)
     }
-    
 }
