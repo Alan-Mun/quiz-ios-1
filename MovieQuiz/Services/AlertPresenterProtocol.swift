@@ -1,8 +1,7 @@
-//
-//  AlertPresenterProtocol.swift
-//  MovieQuiz
-//
-//  Created by Алан Мун on 04.01.2024.
-//
-
 import Foundation
+
+
+protocol AlertPresenterProtocol {
+    var delegate: AlertPresenterDelegate? { get set }
+    func showResult(quiz result: AlertModel)
+}
