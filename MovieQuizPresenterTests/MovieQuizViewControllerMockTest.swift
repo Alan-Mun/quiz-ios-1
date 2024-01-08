@@ -1,8 +1,34 @@
-//
-//  MovieQuizViewControllerMockTest.swift
-//  MovieQuizPresenterTests
-//
-//  Created by Алан Мун on 08.01.2024.
-//
+import XCTest
+@testable import MovieQuiz
 
-import Foundation
+class MovieQuizViewControllerMock: MovieQuizViewControllerProtocol {
+    
+    func showCurrentQuestion(step: QuizStepViewModel) {
+        
+    }
+    
+    func showQuizResults(result: QuizResultsViewModel) {
+        
+    }
+    
+    func highlightImageBorder(isCorrectAnswer: Bool) {
+        
+    }
+    
+    func showLoadingIndicator() {
+        
+    }
+    
+    func hideLoadingIndicator() {
+        
+    }
+    
+    func setButtonsEnabled(_ isEnabled: Bool) {
+        
+    }
+    
+    func showNetworkError(message: String) {
+        
+    }
+}
+

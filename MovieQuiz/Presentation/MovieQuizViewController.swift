@@ -1,97 +1,105 @@
 import UIKit
 
-protocol MovieQuizViewControllerProtocol: AnyObject {
-    
-    func show(quiz step: QuizStepViewModel)
-    
-    func highlightImageBorder(isCorrectAnswer: Bool)
-    func enableButtons(isEnable: Bool)
-    
-    func showLoadingIndicator()
-    func hideActivityIndicator()
-    
-    func showNetworkError(message: String)
-    var alertPresenter: AlertPresenterProtocol { get set }
-}
+// MARK: - MovieQuizViewController
 
-final class MovieQuizViewController: UIViewController, AlertPresenterDelegate, MovieQuizViewControllerProtocol {
-    @IBOutlet var imageView: UIImageView!
-    @IBOutlet private var textLabel: UILabel!
-    @IBOutlet private var counterLabel: UILabel!
-    @IBOutlet weak var yesButton: UIButton!
-    @IBOutlet weak var noButton: UIButton!
-    @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
+final class MovieQuizViewController: UIViewController, MovieQuizViewControllerProtocol {
     
+    // MARK: - IBOutlet
     
-    var alertPresenter: AlertPresenterProtocol = ResultAlertPresenter()
+    @IBOutlet private weak var noButton: UIButton!
+    @IBOutlet private weak var yesButton: UIButton!
+    @IBOutlet private weak var imageView: UIImageView!
+    @IBOutlet private weak var textLabel: UILabel!
+    @IBOutlet private weak var counterLabel: UILabel!
+    @IBOutlet private weak var activityIndicator: UIActivityIndicatorView!
     
+    // MARK: - Private variables
     
     private var presenter: MovieQuizPresenter!
+    private var alertPresenter: AlertPresenter!
+    private var isButtonsEnabled = true
     
+    // MARK: - Lifecycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        presenter = MovieQuizPresenter(viewController: self)
-        imageView.layer.cornerRadius = 20
-        alertPresenter.delegate = self
+        alertPresenter = AlertPresenterImpl(viewController: self)
+        presenter = MovieQuizPresenter(viewController: self, alertPresenter: alertPresenter)
         showLoadingIndicator()
+        activityIndicator.hidesWhenStopped = true
+        activityIndicator.startAnimating()
     }
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
         return .lightContent
     }
     
-    @IBAction private func yesButtonClicked(_ sender: UIButton) {
-        presenter.yesButtonClicked()
-        enableButtons(isEnable: false)
-    }
+    // MARK: - Public Methods
     
-    @IBAction private func noButtonClicked(_ sender: UIButton) {
-        presenter.noButtonClicked()
-        enableButtons(isEnable: false)
-    }
-    func enableButtons(isEnable: Bool) {
-        yesButton.isEnabled = isEnable
-        noButton.isEnabled = isEnable
-    }
-    
-    func show(quiz step: QuizStepViewModel) {
-        enableButtons(isEnable: true)
-        imageView.layer.borderColor = UIColor.clear.cgColor
+    func showCurrentQuestion(step: QuizStepViewModel) {
         imageView.image = step.image
         textLabel.text = step.question
         counterLabel.text = step.questionNumber
+        
+        imageView.layer.borderWidth = 0
+        imageView.layer.borderColor = UIColor.clear.cgColor
     }
     
-    func didReceiveAlert() {
-        presenter.restartGame()
+    func showQuizResults(result: QuizResultsViewModel) {
+        presenter.showQuizResultsAlert()
     }
-    
     
     func highlightImageBorder(isCorrectAnswer: Bool) {
         imageView.layer.masksToBounds = true
         imageView.layer.borderWidth = 8
-        imageView.layer.cornerRadius = 20
         imageView.layer.borderColor = isCorrectAnswer ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
     }
     
     func showLoadingIndicator() {
-        activityIndicator.color = .black
         activityIndicator.isHidden = false
         activityIndicator.startAnimating()
     }
     
-    func hideActivityIndicator() {
+    func hideLoadingIndicator() {
         activityIndicator.isHidden = true
     }
     
+    func setButtonsEnabled(_ isEnabled: Bool) {
+        isButtonsEnabled = isEnabled
+        yesButton.isEnabled = isEnabled
+        noButton.isEnabled = isEnabled
+    }
+    
+    @IBAction private func yesButtonClicked(_ sender: UIButton) {
+        if isButtonsEnabled {
+            presenter.yesButtonClicked()
+            setButtonsEnabled(false)
+        }
+    }
+    
+    @IBAction private func noButtonClicked(_ sender: UIButton) {
+        if isButtonsEnabled {
+            presenter.noButtonClicked()
+            setButtonsEnabled(false)
+        }
+    }
+    
     func showNetworkError(message: String) {
-        hideActivityIndicator() // скрываем индикатор загрузки
-        let model = AlertModel(title: "Ошибка",
-                               message: message,
-                               buttonText: "Попробовать еще раз")
+        hideLoadingIndicator()
+        let alertModel = AlertModel(title: "Ошибка",
+                                    message: message,
+                                    buttonText: "Попробовать еще раз") { [weak self] in
+            guard let self = self else { return }
+            
+            self.presenter.restartGame()
+            self.presenter.switchToNextQuestion()
+            self.showLoadingIndicator()
+        }
         
-        alertPresenter.showResult(quiz: model)
+        alertPresenter?.show(alertModel: alertModel)
+    }
+    
+    func didFailToLoadImage(with error: Error) {
+        presenter.didFailToLoadImage(with: error)
     }
 }
