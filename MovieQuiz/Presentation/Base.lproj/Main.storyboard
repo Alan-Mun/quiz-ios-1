@@ -83,7 +83,7 @@
                                                     </userDefinedRuntimeAttribute>
                                                 </userDefinedRuntimeAttributes>
                                                 <connections>
-                                                    <action selector="noButtonAction:" destination="BYZ-38-t0r" eventType="touchUpInside" id="JUi-61-zkM"/>
+                                                    <action selector="noButtonClicked:" destination="BYZ-38-t0r" eventType="touchUpInside" id="cga-Uq-fgh"/>
                                                 </connections>
                                             </button>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="eAK-qg-0r5" userLabel="Yes Button">
@@ -100,7 +100,7 @@
                                                     </userDefinedRuntimeAttribute>
                                                 </userDefinedRuntimeAttributes>
                                                 <connections>
-                                                    <action selector="yesButtonAction:" destination="BYZ-38-t0r" eventType="touchUpInside" id="Rm2-PN-aSW"/>
+                                                    <action selector="yesButtonClicked:" destination="BYZ-38-t0r" eventType="touchUpInside" id="3Zp-oi-Re5"/>
                                                 </connections>
                                             </button>
                                         </subviews>
