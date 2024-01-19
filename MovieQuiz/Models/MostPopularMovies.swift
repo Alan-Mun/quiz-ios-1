@@ -12,9 +12,10 @@ struct MostPopularMovie: Codable {
     
     var resizedImageURL: URL {
         let urlString = imageURL.absoluteString
-        let imageUrlString = urlString.components(separatedBy: "._")[0] + "._V0_UX600_.jpg"
         
-        guard let newURL = URL(string: imageUrlString) else {
+        let imageURLString = urlString.components(separatedBy: "._")[0] + "._v0_UX600_.jpg"
+        
+        guard let newURL = URL(string: imageURLString) else {
             return imageURL
         }
         

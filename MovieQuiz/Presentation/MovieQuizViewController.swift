@@ -1,60 +1,31 @@
 import UIKit
 
-// MARK: - MovieQuizViewController
+
 
 final class MovieQuizViewController: UIViewController, MovieQuizViewControllerProtocol {
     
-    // MARK: - IBOutlet
+    // MARK: - Lifecycle
+    @IBOutlet private var activityIndicator: UIActivityIndicatorView!
+    @IBOutlet private var imageView: UIImageView!
+    @IBOutlet private var textLabel: UILabel!
+    @IBOutlet private var counterLabel: UILabel!
+    @IBOutlet private var noButtonClicked: UIButton!
+    @IBOutlet private var yesButtonClicked: UIButton!
     
-    @IBOutlet private weak var noButton: UIButton!
-    @IBOutlet private weak var yesButton: UIButton!
-    @IBOutlet private weak var imageView: UIImageView!
-    @IBOutlet private weak var textLabel: UILabel!
-    @IBOutlet private weak var counterLabel: UILabel!
-    @IBOutlet private weak var activityIndicator: UIActivityIndicatorView!
+    @IBAction private func yesButtonClicked(_ sender: UIButton) {
+        presenter.yesButtonClicked()
+    }
     
-    // MARK: - Private variables
+    @IBAction private func noButtonClicked(_ sender: UIButton) {
+        presenter.noButtonClicked()
+    }
+    
     
     private var presenter: MovieQuizPresenter!
-    private var alertPresenter: AlertPresenter!
-    private var isButtonsEnabled = true
+    var alertPresenter: AlertPresenter = AlertPresenter()
     
-    // MARK: - Lifecycle
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        alertPresenter = AlertPresenterImpl(viewController: self)
-        presenter = MovieQuizPresenter(viewController: self, alertPresenter: alertPresenter)
-        showLoadingIndicator()
-        activityIndicator.hidesWhenStopped = true
-        activityIndicator.startAnimating()
-    }
-    
-    override var preferredStatusBarStyle: UIStatusBarStyle {
-        return .lightContent
-    }
     
     // MARK: - Public Methods
-    
-    func showCurrentQuestion(step: QuizStepViewModel) {
-        imageView.image = step.image
-        textLabel.text = step.question
-        counterLabel.text = step.questionNumber
-        
-        imageView.layer.borderWidth = 0
-        imageView.layer.borderColor = UIColor.clear.cgColor
-    }
-    
-    func showQuizResults(result: QuizResultsViewModel) {
-        presenter.showQuizResultsAlert()
-    }
-    
-    func highlightImageBorder(isCorrectAnswer: Bool) {
-        imageView.layer.masksToBounds = true
-        imageView.layer.borderWidth = 8
-        imageView.layer.borderColor = isCorrectAnswer ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
-    }
-    
     func showLoadingIndicator() {
         activityIndicator.isHidden = false
         activityIndicator.startAnimating()
@@ -64,42 +35,139 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
         activityIndicator.isHidden = true
     }
     
-    func setButtonsEnabled(_ isEnabled: Bool) {
-        isButtonsEnabled = isEnabled
-        yesButton.isEnabled = isEnabled
-        noButton.isEnabled = isEnabled
+    func areButtonsEnable(bool: Bool) {
+        noButtonClicked.isEnabled = bool
+        yesButtonClicked.isEnabled = bool
     }
     
-    @IBAction private func yesButtonClicked(_ sender: UIButton) {
-        if isButtonsEnabled {
-            presenter.yesButtonClicked()
-            setButtonsEnabled(false)
-        }
+    func unshowImageBorederColor() {
+        imageView.layer.masksToBounds = true
+        imageView.layer.borderWidth = 0
+        imageView.layer.cornerRadius = 20
     }
     
-    @IBAction private func noButtonClicked(_ sender: UIButton) {
-        if isButtonsEnabled {
-            presenter.noButtonClicked()
-            setButtonsEnabled(false)
-        }
+    func show(quiz step: QuizStepViewModel) {
+        imageView.image = step.image
+        textLabel.text = step.question
+        counterLabel.text = step.questionNumber
+    }
+    
+    
+    func highlightImageBorder(isCorrectAnswer: Bool) {
+        areButtonsEnable(bool: false)
+        
+        imageView.layer.masksToBounds = true
+        imageView.layer.borderWidth = 8
+        imageView.layer.borderColor = isCorrectAnswer ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
+    }
+    
+    
+    // MARK: - Alerts
+    func showAlertPresenter() {
+        
+        
+        let text: [String] = presenter.statisticAlertStrings().components(separatedBy: "\n")
+        
+        let someVar = AlertModel(title: "Этот раунд окончен!", message: "\(text[0])\n\(text[1])\n\(text[2])\n\(text[3])", buttonText: "Сыграть ещё раз", comletion: { [weak self] in
+            guard let self = self else {return}
+            
+            self.presenter.restartGame()
+        })
+        alertPresenter.controller = self
+        alertPresenter.show(in: self, model: someVar)
+        unshowImageBorederColor()
     }
     
     func showNetworkError(message: String) {
         hideLoadingIndicator()
-        let alertModel = AlertModel(title: "Ошибка",
-                                    message: message,
-                                    buttonText: "Попробовать еще раз") { [weak self] in
-            guard let self = self else { return }
-            
-            self.presenter.restartGame()
-            self.presenter.switchToNextQuestion()
-            self.showLoadingIndicator()
-        }
         
-        alertPresenter?.show(alertModel: alertModel)
+        
+        let model = AlertModel(
+            title: "Ошибка",
+            message: message,
+            buttonText: "Попробуйте ещё раз") { [weak self] in
+                
+                guard let self = self else {return}
+                
+                self.presenter.restartGame()
+                
+                self.showLoadingIndicator()
+                self.viewDidLoad()
+            }
+        alertPresenter.show(in: self, model: model)
     }
     
-    func didFailToLoadImage(with error: Error) {
-        presenter.didFailToLoadImage(with: error)
+    
+    //MARK: - Override Methods
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        imageView.layer.cornerRadius = 20
+        presenter = MovieQuizPresenter(viewController: self)
     }
 }
+
+
+
+/*
+ Mock-данные
+ 
+ 
+ Картинка: The Godfather
+ Настоящий рейтинг: 9,2
+ Вопрос: Рейтинг этого фильма больше чем 6?
+ Ответ: ДА
+ 
+ 
+ Картинка: The Dark Knight
+ Настоящий рейтинг: 9
+ Вопрос: Рейтинг этого фильма больше чем 6?
+ Ответ: ДА
+ 
+ 
+ Картинка: Kill Bill
+ Настоящий рейтинг: 8,1
+ Вопрос: Рейтинг этого фильма больше чем 6?
+ Ответ: ДА
+ 
+ 
+ Картинка: The Avengers
+ Настоящий рейтинг: 8
+ Вопрос: Рейтинг этого фильма больше чем 6?
+ Ответ: ДА
+ 
+ 
+ Картинка: Deadpool
+ Настоящий рейтинг: 8
+ Вопрос: Рейтинг этого фильма больше чем 6?
+ Ответ: ДА
+ 
+ 
+ Картинка: The Green Knight
+ Настоящий рейтинг: 6,6
+ Вопрос: Рейтинг этого фильма больше чем 6?
+ Ответ: ДА
+ 
+ 
+ Картинка: Old
+ Настоящий рейтинг: 5,8
+ Вопрос: Рейтинг этого фильма больше чем 6?
+ Ответ: НЕТ
+ 
+ 
+ Картинка: The Ice Age Adventures of Buck Wild
+ Настоящий рейтинг: 4,3
+ Вопрос: Рейтинг этого фильма больше чем 6?
+ Ответ: НЕТ
+ 
+ 
+ Картинка: Tesla
+ Настоящий рейтинг: 5,1
+ Вопрос: Рейтинг этого фильма больше чем 6?
+ Ответ: НЕТ
+ 
+ 
+ Картинка: Vivarium
+ Настоящий рейтинг: 5,8
+ Вопрос: Рейтинг этого фильма больше чем 6?
+ Ответ: НЕТ
+ */

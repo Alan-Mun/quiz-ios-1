@@ -1,61 +1,68 @@
 import Foundation
 
+
+
 protocol StatisticService {
-    func store(correct: Int, total: Int)
-    var totalAccuracy: Double { get }
-    var gamesCount: Int { get }
-    var bestGame: BestGame? { get }
+    var totalAccuracy: Double {get}
+    var gamesCount: Int {get set}
+    var gameRecord: GameRecord? {get set}
+    
+    func store(correct: Int,total: Int)
 }
 
-final class StatisticServiceImpl {
+
+final class StatisticServiceImplementation: StatisticService {
+    
     
     private enum Keys: String {
         case correct, total, bestGame, gamesCount
     }
     
-    private let decoder: JSONDecoder
-    private let encoder: JSONEncoder
-    private var userDefaults = UserDefaults.standard
-    private let dateProvider: () -> Date
-    
-    init(userDefaults: UserDefaults = .standard,
-         decoder: JSONDecoder = JSONDecoder(),
-         encoder: JSONEncoder = JSONEncoder(),
-         dateProvider: @escaping () -> Date = { Date() }
-    ) {
-        self.userDefaults = userDefaults
-        self.decoder = decoder
-        self.encoder = encoder
-        self.dateProvider = dateProvider
-    }
-}
-
-extension StatisticServiceImpl: StatisticService {
-    
-    var gamesCount: Int {
+    var total: Int {
         get {
-            userDefaults.integer(forKey: Keys.gamesCount.rawValue)
+            UserDefaults.standard.integer(forKey: Keys.total.rawValue)
         }
         set {
-            userDefaults.set(newValue, forKey: Keys.gamesCount.rawValue)
+            UserDefaults.standard.setValue(newValue, forKey: Keys.total.rawValue)
         }
     }
     
     var correct: Int {
         get {
-            userDefaults.integer(forKey: Keys.correct.rawValue)
+            UserDefaults.standard.integer(forKey: Keys.correct.rawValue)
         }
         set {
-            userDefaults.set(newValue, forKey: Keys.correct.rawValue)
+            UserDefaults.standard.setValue(newValue, forKey: Keys.correct.rawValue)
         }
     }
     
-    var total: Int {
+    var gamesCount: Int {
         get {
-            userDefaults.integer(forKey: Keys.total.rawValue)
+            UserDefaults.standard.integer(forKey: Keys.gamesCount.rawValue)
         }
         set {
-            userDefaults.set(newValue, forKey: Keys.total.rawValue)
+            UserDefaults.standard.setValue(newValue, forKey: Keys.gamesCount.rawValue)
+        }
+    }
+    
+    
+    var gameRecord: GameRecord? {
+        get {
+            guard let data = UserDefaults.standard.data(forKey: Keys.bestGame.rawValue),
+                  let gameRecord = try? JSONDecoder().decode(GameRecord.self, from: data) else {
+                return .init(correct: 0, total: 0, date: Date())
+            }
+
+            return gameRecord
+        }
+
+        set {
+            guard let data = try? JSONEncoder().encode(newValue)  else {
+                print("Невозможно сохранить результат")
+                return
+            }
+
+            UserDefaults.standard.set(data, forKey: Keys.bestGame.rawValue)
         }
     }
     
@@ -63,38 +70,20 @@ extension StatisticServiceImpl: StatisticService {
         Double(correct) / Double(total) * 100
     }
     
-    var bestGame: BestGame? {
-        get {
-            guard
-                let data = userDefaults.data(forKey: Keys.bestGame.rawValue),
-                let bestGame = try? decoder.decode(BestGame.self, from: data) else {
-                return nil
-            }
-            return bestGame
-        }
-        
-        set {
-            let data = try? encoder.encode(newValue)
-            userDefaults.set(data, forKey: Keys.bestGame.rawValue)
-        }
-    }
-    
     func store(correct: Int, total: Int) {
         self.correct += correct
         self.total += total
         self.gamesCount += 1
         
-        let date = dateProvider()
-        let currentBestGame = BestGame(correct: correct, total: total, date: date)
+        let currentGame = GameRecord(correct: correct, total: total, date: Date())
         
-        if let previousBestGame = bestGame {
-            if currentBestGame > previousBestGame {
-                bestGame = currentBestGame
+        let previousBestGame = gameRecord
+        if let previousBestGame = gameRecord {
+            if currentGame > previousBestGame {
+                gameRecord = currentGame
             }
         } else {
-            bestGame = currentBestGame
+            gameRecord = currentGame
         }
     }
 }
-
-

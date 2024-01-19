@@ -18,12 +18,7 @@ final class MovieQuizUITests: XCTestCase {
         
         app.terminate()
         app = nil
-    }
-    
-    func testExample() throws {
         
-        let app = XCUIApplication()
-        app.launch()
     }
     
     func testYesButton() {
@@ -37,9 +32,9 @@ final class MovieQuizUITests: XCTestCase {
         
         let secondPoster = app.images["Poster"]
         let secondPosterData = secondPoster.screenshot().pngRepresentation
-        
-        let indexLabel = app.staticTexts["Index"]
-        
+
+        let indexLabel = app.staticTexts["Index Label"]
+       
         XCTAssertNotEqual(firstPosterData, secondPosterData)
         XCTAssertEqual(indexLabel.label, "2/10")
     }
@@ -55,39 +50,50 @@ final class MovieQuizUITests: XCTestCase {
         
         let secondPoster = app.images["Poster"]
         let secondPosterData = secondPoster.screenshot().pngRepresentation
-        
-        let indexLabel = app.staticTexts["Index"]
-        
+
+        let indexLabel = app.staticTexts["Index Label"]
+       
         XCTAssertNotEqual(firstPosterData, secondPosterData)
         XCTAssertEqual(indexLabel.label, "2/10")
     }
     
-    func testGameFinishAlert() {
+    func testGameFinish() {
         sleep(2)
         for _ in 1...10 {
             app.buttons["No"].tap()
-            sleep(3)
+            sleep(2)
         }
+
+        let alert = app.alerts["Этот раунд окончен!"]
         
-        let gameFinishAlert = app.alerts["Этот раунд окончен!"]
-        XCTAssertTrue(gameFinishAlert.exists)
-        XCTAssertTrue(gameFinishAlert.label == "Этот раунд окончен!")
-        XCTAssertTrue(gameFinishAlert.buttons.firstMatch.label == "Сыграть ещё раз")
+        let alertButton = app.alerts["Этот раунд окончен!"].scrollViews.otherElements.buttons["Сыграть ещё раз"]
+        
+        XCTAssertTrue(alert.exists)
+        XCTAssertTrue(alert.label == "Этот раунд окончен!")
+        XCTAssertTrue(alertButton.label == "Сыграть ещё раз")
     }
     
     func testAlertDismiss() {
         sleep(2)
-        for _ in 1...10 {
+        for _ in 1...9 {
             app.buttons["No"].tap()
-            sleep(3)
+            sleep(2)
         }
+        let indexLabel = app.staticTexts["Index Label"]
         
-        let gameFinishAlert = app.alerts["Этот раунд окончен!"]
-        gameFinishAlert.buttons.firstMatch.tap()
+        XCTAssertTrue(indexLabel.label == "10/10")
+        sleep(1)
         
+        app.buttons["No"].tap()
         sleep(2)
         
-        let indexLabel = app.staticTexts["Index"]
+        let alert = app.alerts["Этот раунд окончен!"]
+        
+        alert.buttons.firstMatch.tap()
+        
+        sleep(2)
+        print("\(indexLabel)🚫")
+        XCTAssertFalse(alert.exists)
         XCTAssertTrue(indexLabel.label == "1/10")
     }
 }
